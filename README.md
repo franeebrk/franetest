@@ -1,6 +1,6 @@
 # OCR REST API
 
-REST API koji zaprima sliku ili PDF dokument, provodi OCR i vraća prepoznati
+Zadatak je kreirati REST API koji zaprima sliku ili PDF dokument, provodi OCR i vraća prepoznati
 tekst u Markdown formatu. Izgrađen je s FastAPI-jem i self-hosted OCR enginom
 (Tesseract).
 
@@ -10,7 +10,7 @@ Podržani formati: `.png`, `.jpg`, `.jpeg`, `.pdf`.
 
 ## Pokretanje
 
-### Docker (preporučeno)
+### Docker (preporučeno, najviše istestirano)
 
 Jedini preduvjet je instaliran Docker. Sve ostalo (Python, Tesseract, jezični
 paketi i biblioteke) gradi se automatski iz `Dockerfile`-a.
@@ -24,7 +24,7 @@ API je nakon toga dostupan na `http://localhost:8000`.
 ### Bez Dockera (lokalno)
 
 Ako Docker nije dostupan, aplikacija se može pokrenuti i lokalno. U tom slučaju
-Tesseract treba instalirati ručno jer je sistemski program, a ne Python paket.
+Tesseract treba instalirati ručno.
 
 1. Instalacija Tesseracta (s hrvatskim i engleskim jezikom):
 
@@ -54,7 +54,7 @@ Tesseract treba instalirati ručno jer je sistemski program, a ne Python paket.
 
 ## Korištenje
 
-Aplikacija nudi tri načina korištenja:
+Ova aplikacija nudi tri načina korištenja:
 
 - **Web sučelje** — `http://localhost:8000` (jednostavan upload obrazac za demo)
 - **Interaktivna dokumentacija** — `http://localhost:8000/docs` (Swagger UI)
