@@ -44,11 +44,28 @@ program, a ne Python paket.
    *Path* sistemskih varijabli. Nakon toga ponovno otvori terminal i provjeri
    `tesseract --version`.
 
-2. Instalacija Python ovisnosti:
+2. Instalacija Python ovisnosti (naredbe se pokreću iz korijena projekta, tj.
+   foldera u kojem se nalazi `requirements.txt`):
 
    ```bash
+   # macOS / Linux
    python -m venv .venv
-   source .venv/bin/activate        # Windows: .venv\Scripts\activate
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
+
+   Na **Windowsu** se virtualno okruženje aktivira drukčije:
+
+   ```powershell
+   python -m venv .venv
+
+   # PowerShell (ako aktivacija bude blokirana zbog execution policyja):
+   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+   .venv\Scripts\Activate.ps1
+
+   # ili u Command Promptu (CMD):
+   # .venv\Scripts\activate.bat
+
    pip install -r requirements.txt
    ```
 
