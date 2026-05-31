@@ -1,8 +1,8 @@
 # OCR REST API
 
-Zadatak je kreirati REST API koji zaprima sliku ili PDF dokument, provodi OCR i vraća prepoznati
-tekst u Markdown formatu. Izgrađen je s FastAPI-jem i self-hosted OCR enginom
-(Tesseract).
+Zadatak je kreirati REST API koji zaprima sliku ili PDF dokument, provodi OCR i
+vraća prepoznati tekst u Markdown formatu. Izgrađen je s FastAPI-jem i
+self-hosted OCR enginom (Tesseract).
 
 Podržani formati: `.png`, `.jpg`, `.jpeg`, `.pdf`.
 
@@ -24,7 +24,8 @@ API je nakon toga dostupan na `http://localhost:8000`.
 ### Bez Dockera (lokalno)
 
 Ako Docker nije dostupan, aplikacija se može pokrenuti i lokalno. U tom slučaju
-Tesseract treba instalirati ručno.
+treba ručno instalirati Python (3.11+) i Tesseract, jer je Tesseract sistemski
+program, a ne Python paket.
 
 1. Instalacija Tesseracta (s hrvatskim i engleskim jezikom):
 
@@ -35,6 +36,13 @@ Tesseract treba instalirati ručno.
    # Ubuntu / Debian
    sudo apt-get install tesseract-ocr tesseract-ocr-hrv tesseract-ocr-eng
    ```
+
+   **Windows:** Tesseract nema `apt`/`brew`, pa se instalira preko installera s
+   [UB-Mannheim](https://github.com/UB-Mannheim/tesseract/wiki). Tijekom
+   instalacije pod *Additional language data* odaberi **Croatian** i **English**,
+   a putanju instalacije (npr. `C:\Program Files\Tesseract-OCR`) dodaj u
+   *Path* sistemskih varijabli. Nakon toga ponovno otvori terminal i provjeri
+   `tesseract --version`.
 
 2. Instalacija Python ovisnosti:
 
@@ -54,7 +62,7 @@ Tesseract treba instalirati ručno.
 
 ## Korištenje
 
-Ova aplikacija nudi tri načina korištenja:
+Aplikacija nudi tri načina korištenja:
 
 - **Web sučelje** — `http://localhost:8000` (jednostavan upload obrazac za demo)
 - **Interaktivna dokumentacija** — `http://localhost:8000/docs` (Swagger UI)
