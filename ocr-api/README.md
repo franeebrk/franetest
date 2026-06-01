@@ -23,8 +23,7 @@ API je dostupan na `http://localhost:8000`.
 
 ### Bez Dockera (lokalno)
 
-Lokalno je potrebno ručno instalirati Python (3.11+) i Tesseract. Tesseract je
-sistemski program, a ne Python paket, pa se instalira zasebno.
+Lokalno je potrebno ručno instalirati Python (3.11+) i Tesseract.
 
 1. Tesseract (s hrvatskim i engleskim jezikom):
 
@@ -51,7 +50,8 @@ sistemski program, a ne Python paket, pa se instalira zasebno.
    pip install -r requirements.txt
    ```
 
-   Na **Windowsu** se virtualno okruženje aktivira drukčije:
+   Na **Windowsu** se virtualno okruženje aktivira drukčije (bar u mojem
+   slučaju prilikom testiranja):
 
    ```powershell
    python -m venv .venv
@@ -114,10 +114,9 @@ ima ugrađenu detekciju orijentacije i veću točnost na fotografijama. Međutim
 povlači velike modele i znatnu količinu memorije te se na 8 GB RAM-a nije
 stabilno pokrenuo.
 
-Stoga je odabran **Tesseract**: zreo, lagan, bez GPU zahtjeva, s dobrom podrškom
-za hrvatski jezik (`eng+hrv`). Budući da je slabiji na ulazima niže kvalitete,
-taj nedostatak nadoknađuju preprocessing, korekcija rotacije i izravno čitanje
-digitalnih PDF-ova.
+Odabran je **Tesseract** — lagan je, ne traži GPU i dobro podržava hrvatski
+(`eng+hrv`). Slabiji je na lošijim slikama, pa tu pomažu preprocessing,
+korekcija rotacije i izravno čitanje digitalnih PDF-ova.
 
 ### PDF — odluka po stranici
 
@@ -126,12 +125,12 @@ provjerava se postoji li tekstualni sloj:
 
 - **digitalna stranica** — čita se izravno PyMuPDF-om (brže, preciznije, bez
   gubitka formatiranja)
-- **skenirana stranica** — rasterizira se u sliku (300 DPI) i šalje na Tesseract
+- **skenirana stranica** — pretvara se u sliku (rasterizacija, 300 DPI) i šalje
+  na Tesseract
 
 Odluka se donosi po stranici, a ne za cijeli dokument. U protivnom bi se kod
 mješovitog PDF-a skenirane stranice izgubile, jer bi digitalne stranice
-"napunile" broj znakova iznad praga. Rasterizaciju obavlja sam PyMuPDF, pa
-Poppler nije potreban.
+"napunile" broj znakova iznad praga.
 
 ### Tablice
 
@@ -246,5 +245,3 @@ curl -X POST http://localhost:8000/api/v1/ocr \
 - **Slike s mnogo netekstualnih elemenata** — segmentacija teksta od grafike
 - **Rukopis** — zaseban model, jer ga Tesseract slabo prepoznaje
 - **Izdvajanje strukture** — pouzdanije prepoznavanje naslova i odlomaka
-- **Performanse i skalabilnost** — asinkrona obrada velikih PDF-ova i caching
-  rezultata po hashu datoteke
