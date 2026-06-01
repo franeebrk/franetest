@@ -1,7 +1,8 @@
 # OCR REST API
 
-REST API koji prima sliku ili PDF, provede OCR i vrati tekst u Markdownu.
-Napravljen u FastAPI-ju s Tesseractom kao OCR enginom.
+REST API koji zaprima sliku ili PDF dokument, provodi OCR i vraća prepoznati
+tekst u Markdown formatu. Implementiran je u FastAPI-ju, s Tesseractom kao
+OCR enginom.
 
 Podržani formati: `.png`, `.jpg`, `.jpeg`, `.pdf`.
 
@@ -11,20 +12,21 @@ Podržani formati: `.png`, `.jpg`, `.jpeg`, `.pdf`.
 
 ### Docker (preporučeno)
 
-Treba ti samo Docker — Python, Tesseract i sve ostalo gradi se iz `Dockerfile`-a.
+Potreban je samo Docker — Python, Tesseract i ostale ovisnosti grade se
+automatski iz `Dockerfile`-a.
 
 ```bash
 docker compose up --build
 ```
 
-API radi na `http://localhost:8000`.
+API je dostupan na `http://localhost:8000`.
 
 ### Bez Dockera (lokalno)
 
-Treba ručno instalirati Python (3.11+) i Tesseract. Tesseract je sistemski
-program, ne Python paket, pa ide zasebno.
+Lokalno je potrebno ručno instalirati Python (3.11+) i Tesseract. Tesseract je
+sistemski program, a ne Python paket, pa se instalira zasebno.
 
-1. Tesseract (s hrvatskim i engleskim):
+1. Tesseract (s hrvatskim i engleskim jezikom):
 
    ```bash
    # macOS
@@ -34,11 +36,13 @@ program, ne Python paket, pa ide zasebno.
    sudo apt-get install tesseract-ocr tesseract-ocr-hrv tesseract-ocr-eng
    ```
 
-   **Windows:** instaliraj preko [UB-Mannheim installera](https://github.com/UB-Mannheim/tesseract/wiki).
-   Pod *Additional language data* odaberi Croatian i English, a putanju (npr.
-   `C:\Program Files\Tesseract-OCR`) dodaj u *Path*. Provjeri s `tesseract --version`.
+   **Windows:** instalacija ide preko [UB-Mannheim installera](https://github.com/UB-Mannheim/tesseract/wiki).
+   Pod *Additional language data* potrebno je odabrati Croatian i English, a
+   putanju instalacije (npr. `C:\Program Files\Tesseract-OCR`) dodati u *Path*.
+   Provjera: `tesseract --version`.
 
-2. Python ovisnosti (iz korijena projekta, gdje je `requirements.txt`):
+2. Python ovisnosti (naredbe se pokreću iz korijena projekta, gdje se nalazi
+   `requirements.txt`):
 
    ```bash
    # macOS / Linux
@@ -47,12 +51,12 @@ program, ne Python paket, pa ide zasebno.
    pip install -r requirements.txt
    ```
 
-   Na **Windowsu** se okruženje aktivira drukčije:
+   Na **Windowsu** se virtualno okruženje aktivira drukčije:
 
    ```powershell
    python -m venv .venv
 
-   # PowerShell (ako aktivacija bude blokirana):
+   # PowerShell (ako je aktivacija blokirana zbog execution policyja):
    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
    .venv\Scripts\Activate.ps1
    # CMD: .venv\Scripts\activate.bat
@@ -60,7 +64,7 @@ program, ne Python paket, pa ide zasebno.
    pip install -r requirements.txt
    ```
 
-3. Server:
+3. Pokretanje servera:
 
    ```bash
    uvicorn app.main:app --reload
@@ -70,11 +74,11 @@ program, ne Python paket, pa ide zasebno.
 
 ## Korištenje
 
-Tri načina:
+Aplikacija nudi tri načina korištenja:
 
-- **Web sučelje** — `http://localhost:8000` (upload obrazac za demo)
-- **Swagger** — `http://localhost:8000/docs`
-- **Direktan poziv** — niže
+- **Web sučelje** — `http://localhost:8000` (upload obrazac za demonstraciju)
+- **Interaktivna dokumentacija** — `http://localhost:8000/docs` (Swagger UI)
+- **Izravni poziv API-ja** — opisan u nastavku
 
 ### Endpoint
 
@@ -83,12 +87,14 @@ POST /api/v1/ocr
 Content-Type: multipart/form-data
 ```
 
-### Primjer
+### Primjer poziva
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/ocr \
      -F "file=@test_folders/plovidbeni_red.pdf" | python -m json.tool
 ```
+
+### Primjer odgovora
 
 ```json
 {
@@ -103,50 +109,57 @@ curl -X POST http://localhost:8000/api/v1/ocr \
 
 ### OCR engine
 
-Prvotni izbor bio je **PaddleOCR** — bolji na složenom layoutu, s ugrađenom
-detekcijom orijentacije i većom točnošću na fotkama. No povlači velike modele i
-puno memorije te se na 8 GB RAM-a nije stabilno pokrenuo.
+Prvotni izbor bio je **PaddleOCR** — nudi bolje rezultate na složenom rasporedu,
+ima ugrađenu detekciju orijentacije i veću točnost na fotografijama. Međutim,
+povlači velike modele i znatnu količinu memorije te se na 8 GB RAM-a nije
+stabilno pokrenuo.
 
-Odabran je zato **Tesseract**: zreo, lagan, bez GPU-a, s dobrom podrškom za
-hrvatski (`eng+hrv`). Slabiji je na "prljavim" ulazima, pa se to nadoknađuje
-preprocessingom, korekcijom rotacije i izravnim čitanjem digitalnih PDF-ova.
+Stoga je odabran **Tesseract**: zreo, lagan, bez GPU zahtjeva, s dobrom podrškom
+za hrvatski jezik (`eng+hrv`). Budući da je slabiji na ulazima niže kvalitete,
+taj nedostatak nadoknađuju preprocessing, korekcija rotacije i izravno čitanje
+digitalnih PDF-ova.
 
 ### PDF — odluka po stranici
 
-Težište je na digitalnim PDF-ovima. Za **svaku stranicu zasebno** provjerava se
-ima li tekstualni sloj:
+Težište rješenja je na digitalnim PDF dokumentima. Za **svaku stranicu zasebno**
+provjerava se postoji li tekstualni sloj:
 
-- **digitalna** → čita se izravno PyMuPDF-om (brže, preciznije, ne gubi format)
-- **skenirana** → rasterizira se u sliku (300 DPI) i šalje na Tesseract
+- **digitalna stranica** — čita se izravno PyMuPDF-om (brže, preciznije, bez
+  gubitka formatiranja)
+- **skenirana stranica** — rasterizira se u sliku (300 DPI) i šalje na Tesseract
 
-Odluka ide po stranici, ne po cijelom dokumentu — inače bi kod mješovitog PDF-a
-skenirane stranice nestale jer digitalne "napune" broj znakova iznad praga.
-Rasterizira sam PyMuPDF, pa ne treba Poppler.
+Odluka se donosi po stranici, a ne za cijeli dokument. U protivnom bi se kod
+mješovitog PDF-a skenirane stranice izgubile, jer bi digitalne stranice
+"napunile" broj znakova iznad praga. Rasterizaciju obavlja sam PyMuPDF, pa
+Poppler nije potreban.
 
 ### Tablice
 
-Obična ekstrakcija pretvori tablicu u nečitljiv niz. Kod digitalnih PDF-ova
-tablice se vade s `find_tables()` i slažu s tekstom po y-koordinati da ostanu na
-mjestu. Kod slika isto radi `img2table`.
+Standardna ekstrakcija pretvara tablicu u nečitljiv niz teksta. Kod digitalnih
+PDF-ova tablice se izdvajaju funkcijom `find_tables()` i slažu s ostatkom teksta
+po y-koordinati, čime ostaju na svom mjestu u dokumentu. Kod slika isti zadatak
+obavlja `img2table`.
 
-### Preprocessing i rotacija
+### Preprocessing i korekcija rotacije
 
-Prije OCR-a slika prolazi OpenCV obradu: grayscale, uklanjanje šuma i Otsu
-binarizacija — rubovi slova postanu oštriji. Rotaciju hvata Tesseractov OSD i
-ispravlja zakrenutu stranicu (90/180/270°) prije OCR-a.
+Prije OCR-a slika prolazi obradu OpenCV-om: pretvorba u sive tonove, uklanjanje
+šuma i Otsu binarizacija, čime rubovi slova postaju oštriji. Rotaciju
+prepoznaje Tesseractov OSD i ispravlja zakrenutu stranicu (90/180/270°) prije
+OCR-a.
 
-### Markdown
+### Markdown konverzija
 
-Konverzija je namjerno minimalna — naslovi i složen raspored se ne pogađaju jer
-to brzo daje krive rezultate. Sažimaju se prazni retci, prepoznaju liste, a
-svaka stranica dobiva `## Page N`.
+Konverzija je namjerno minimalna — naslovi i složen raspored se ne pokušavaju
+pogađati, jer to brzo proizvodi netočne rezultate. Sažimaju se prazni retci,
+prepoznaju liste, a svaka stranica dobiva `## Page N` zaglavlje.
 
 ---
 
-## Organizacija
+## Organizacija projekta
 
-Tri sloja: HTTP (router), logika (servis), modeli. Servis je odvojen od routera
-da se može testirati neovisno i da se engine može zamijeniti bez diranja API-ja.
+Projekt je podijeljen u tri sloja: HTTP (router), poslovna logika (servis) i
+modeli. Servis je odvojen od routera kako bi se mogao testirati neovisno i kako
+bi se OCR engine mogao zamijeniti bez izmjena API sloja.
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -162,16 +175,16 @@ Struktura datoteka:
 
 ```
 app/
-  main.py                  # FastAPI app, CORS, statika
-  routers/ocr.py           # endpoint, validacija ulaza, greške
+  main.py                  # FastAPI aplikacija, CORS, statički sadržaj
+  routers/ocr.py           # endpoint, validacija ulaza, mapiranje grešaka
   services/ocr_service.py  # sva OCR logika (PDF, slike, tablice, Markdown)
   models/response.py       # Pydantic model odgovora
   static/index.html        # web sučelje
 tests/test_api.py          # automatizirani testovi
-test_folders/              # primjeri za ručno testiranje
+test_folders/              # primjeri dokumenata za ručno testiranje
 ```
 
-Tok zahtjeva:
+Tok obrade jednog zahtjeva:
 
 ```
 upload
@@ -194,30 +207,31 @@ Markdown  { filename, markdown }
 
 ## Testiranje
 
-### Automatizirani (`pytest`)
+### Automatizirani testovi (`pytest`)
 
 ```bash
 pytest
 ```
 
-Pokrivaju validaciju ulaza, Markdown konverziju i spajanje stranica. Glavni test
-gradi mješoviti PDF (jedna digitalna + jedna skenirana stranica) i provjerava da
-svaka ide pravim putem. Tesseract je mockan, pa su testovi brzi i deterministički.
+Testovi pokrivaju validaciju ulaza, Markdown konverziju i spajanje stranica.
+Glavni test gradi mješoviti PDF (jedna digitalna i jedna skenirana stranica) i
+provjerava da svaka stranica ide odgovarajućim putem. Tesseract je u testovima
+zamijenjen mockom, pa su brzi i deterministički.
 
-### Ručno (`test_folders/`)
+### Ručno testiranje (`test_folders/`)
 
-Svaki primjer pokriva jedan slučaj:
+Svaki primjer pokriva po jedan slučaj:
 
 | Datoteka | Slučaj |
 | --- | --- |
 | `tekstpjesme.pdf` | digitalni PDF, bez OCR-a |
 | `digitalni.pdf` | digitalni PDF s formatiranjem |
 | `plovidbeni_red.pdf` | tablica → Markdown |
-| `mjesoviti.pdf` | digitalne + skenirane stranice u istom PDF-u |
-| `skenirani.pdf` | potpuni sken, OCR svih stranica |
+| `mjesoviti.pdf` | digitalne i skenirane stranice u istom PDF-u |
+| `skenirani.pdf` | potpuni sken, OCR po svim stranicama |
 | `rotacija.pdf` | zakrenuta stranica (OSD) |
 | `slika.jpg` | fotografirani račun |
-| `slika2.jpg` | netipične boje (svijetli tekst na tamnom) |
+| `slika2.jpg` | netipične boje (svijetli tekst na tamnoj podlozi) |
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/ocr \
@@ -228,8 +242,9 @@ curl -X POST http://localhost:8000/api/v1/ocr \
 
 ## Moguća poboljšanja
 
-- **Mutne i ukošene slike** — deskew i procjena oštrine
-- **Slike s puno grafike** — segmentacija teksta od ostatka
-- **Rukopis** — zaseban model
-- **Struktura** — pouzdanije prepoznavanje naslova i odlomaka
-- **Skalabilnost** — asinkrona obrada velikih PDF-ova i caching po hashu
+- **Mutne i ukošene slike** — deskew i procjena oštrine prije OCR-a
+- **Slike s mnogo netekstualnih elemenata** — segmentacija teksta od grafike
+- **Rukopis** — zaseban model, jer ga Tesseract slabo prepoznaje
+- **Izdvajanje strukture** — pouzdanije prepoznavanje naslova i odlomaka
+- **Performanse i skalabilnost** — asinkrona obrada velikih PDF-ova i caching
+  rezultata po hashu datoteke
